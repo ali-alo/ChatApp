@@ -1,0 +1,96 @@
+﻿@page "/"
+
+<PageTitle>Task 6 - Chat App</PageTitle>
+
+<div class="container d-flex row m-auto">
+    <div class="chat d-flex flex-column col-4 p-0 m-0">
+        <div class="chat-sub p-0 m-0">
+
+            <select class="form-select bg-light" @onchange="AddSelectedTag">
+                <option>Select tag</option>
+                @if (allDbTags != null)
+                {
+                    @foreach (var tag in allDbTags)
+                    {
+                        {
+                            var isChosenAlready = selectedTags.Any(t => tag.Name == t.Name);
+                            <option value="@tag.Name" class="@(isChosenAlready ? "bg-dark" : "")" disabled="@isChosenAlready">@tag.Name</option>
+                        }
+                    }
+                }
+            </select>
+
+            <ul class="p-0 m-0">
+                @foreach (var tag in selectedTags)
+                {
+                    <li class="list-group-item d-flex justify-content-between pt-2">
+                        <span>@tag.Name</span>
+                        <button class="btn bg-white border-0 text-danger float-end" @onclick=@(e => RemoveSelectedTag(tag))>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+                            </svg>
+                        </button>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="row pb-1">
+            <button @onclick="RemoveAllTags" class="btn btn-danger col-6" disabled="@(selectedTags.Count == 0)">Remove All</button>
+            <button @onclick="SelectAllTags" class="btn btn-primary col-6" disabled="@(selectedTags.Count == allDbTags?.Count)">Select All</button>
+        </div>
+        @if (tagCreationError)
+        {
+            <div class="text-danger">
+                <small>These tags alredy present in the db. (tags must start with #)</small>
+            </div>
+        }
+        <div class="d-flex">
+            <input @bind="newTagName" @bind:event="oninput" @onkeyup="CheckTagInput" size="50" class="form-control shadow-none" placeholder="For example: #mood" />
+            <button @onclick="CreateTags" class="btn btn-success" disabled="@(!IsConnected || !IsValidTagInput())">Create</button>
+        </div>
+    </div>
+
+
+    <div class="d-flex flex-column col-8 chat">
+        <div class="chat-sub" @ref="scrollableDiv">
+            @if (messages == null)
+            {
+                <p>Loading content...</p>
+            }
+            else if (messages.Count == 0)
+            {
+                <p>There are no messages yet.</p>
+                <p>Be the first whose message appears here.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled">
+                    @foreach (var message in messages)
+                    {
+                        <li class="pt-2 w-auto">
+                            <span class="badge rounded-pill bg-light text-secondary text-start">
+                                <span class="fs-6 text-wrap text-break">@StyleMessage(message.Content)</span>
+                                <span class="ps-5 pt-2 float-end">@message.Time.ToLocalTime().ToString("HH:mm dd MMM")</span>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+            @if (helpCompleteTags != null && helpCompleteTags.Count > 0)
+            {
+                <div class="list-group">
+                    @foreach (var tag in helpCompleteTags)
+                    {
+                        <button type="button" class="list-group-item list-group-item-action" @onclick="(e => AddTagToText(tag.Name))">@tag.Name</button>
+                    }
+
+                </div>
+            }
+        </div>
+        <div class="d-flex">
+            <input @bind="newMessageContent" @bind:event="oninput" @onkeyup="@CheckInput" class="form-control shadow-none" placeholder="New message" />
+            <button @onclick="SendMessage" class="btn btn-primary" disabled="@(!IsConnected || string.IsNullOrWhiteSpace(newMessageContent))">Send</button>
+        </div>
+    </div>
+</div>
