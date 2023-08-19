@@ -85,7 +85,10 @@ namespace ChatApp.Client.Pages
             if (newTags != null && newTags.Count > 0)
                 await hubConnection.InvokeAsync("UpdateTagsList", newTags);
             foreach (var tag in newMessage.Tags.Where(t => !selectedTags.Any(st => st.Name == t.Name) && allDbTags.Any(dt => dt.Name == t.Name)).ToList()) // make a sent tag selected after sending a message
+            {
                 selectedTags.Add(tag);
+                await GetMessagesByTags();
+            }
             await hubConnection.SendAsync("SendMessage", newMessage);
         }
 
